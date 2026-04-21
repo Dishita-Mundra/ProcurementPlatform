@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProcureSmart - B2B Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Custom Font */
+        body {
+            font-family: "Times New Roman", Times, serif !important;
+        }
+        /* Hide scrollbar for clean UI */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 relative">
+
+    <div id="auth-section" class="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-blue-900 to-gray-900">
+        <div class="max-w-xl w-full bg-white rounded-2xl shadow-2xl p-8 fade-in">
+            
+            <div class="text-center mb-6">
+                <div class="inline-block p-3 bg-blue-100 text-blue-700 rounded-full mb-3 shadow-inner">
+                    <i class="fas fa-handshake fa-2x"></i>
+                </div>
+                <h1 class="text-3xl font-extrabold text-gray-900">ProcureSmart</h1>
+                <p class="text-gray-500 font-medium text-sm mt-1">Anonymous. Verified. Smarter.</p>
+            </div>
+
+            <div class="flex border-b mb-6">
+                <button id="tab-login" onclick="setAuthMode('login')" class="flex-1 py-3 text-sm font-bold border-b-2 border-blue-600 text-blue-600 transition">
+                    Sign In
+                </button>
+                <button id="tab-register" onclick="setAuthMode('register')" class="flex-1 py-3 text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition">
+                    Create Account
+                </button>
+            </div>
+
+            <div class="flex bg-gray-100 p-1 rounded-lg mb-4 relative">
+                <button id="btn-client" onclick="setRole('client')" class="flex-1 py-2 text-sm font-bold rounded-md bg-blue-600 text-white shadow transition-all duration-300">
+                    <i class="fas fa-building mr-1"></i> Client (Buyer)
+                </button>
+                <button id="btn-vendor" onclick="setRole('vendor')" class="flex-1 py-2 text-sm font-bold rounded-md text-gray-500 hover:text-gray-800 transition-all duration-300">
+                    <i class="fas fa-truck mr-1"></i> Vendor
+                </button>
+            </div>
+
+            <div id="error-message" class="hidden bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm font-bold mb-4 border border-red-200 flex items-center">
+                <i class="fas fa-exclamation-triangle mr-2"></i> <span id="error-text">Error</span>
+            </div>
+            <div id="success-message" class="hidden bg-green-50 text-green-700 px-4 py-3 rounded-lg text-sm font-bold mb-4 border border-green-200 flex items-center">
+                <i class="fas fa-check-circle mr-2"></i> <span id="success-text">Account created successfully!</span>
+            </div>
+
+            <form onsubmit="handleAuthSubmit(event)" class="space-y-4">
+                
+                <div id="register-fields" class="hidden space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Company / Full Name</label>
+                            <input id="reg-name" type="text" placeholder="Enter name" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                            <input id="reg-phone" type="tel" pattern="[0-9]{10}" title="Must be a 10 digit number" placeholder="10-digit mobile" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Business Email</label>
+                    <input id="email" type="email" required placeholder="you@company.com" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input id="password" type="password" required placeholder="••••••••" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+
+                <div id="confirm-password-container" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                    <input id="confirm-password" type="password" placeholder="••••••••" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+
+                <div id="kyc-fields" class="hidden space-y-3 bg-blue-50 p-4 rounded-lg border border-blue-100 mt-2 transition-all">
+                    <p class="text-xs text-blue-800 font-bold mb-2"><i class="fas fa-shield-alt"></i> Corporate KYC Verification</p>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Aadhar Card No. (Authorized Signatory) *</label>
+                        <input id="kyc-aadhar" type="text" pattern="[0-9]{12}" title="Must be a 12 digit Aadhar number" placeholder="12-digit Aadhar Number" class="w-full px-3 py-2 border rounded-md text-sm outline-none">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">GST Number *</label>
+                            <input id="kyc-gst" type="text" placeholder="e.g. 22AAAAA0000A1Z5" class="w-full px-3 py-2 border rounded-md text-sm outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Company PAN *</label>
+                            <input id="kyc-pan" type="text" placeholder="e.g. ABCDE1234F" class="w-full px-3 py-2 border rounded-md text-sm outline-none">
+                        </div>
+                    </div>
+
+                    <div id="vendor-trade-license-div" class="hidden mt-2 border-t border-blue-200 pt-2">
+                        <label class="block text-xs font-bold text-gray-800 mb-1"><i class="fas fa-file-signature text-blue-600 mr-1"></i> Trade License (Municipal Authority) *</label>
+                        <input id="vendor-trade-license" type="text" placeholder="Enter Trade License Number" class="w-full px-3 py-2 border border-blue-300 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div id="vendor-certification-div" class="hidden mt-2">
+                        <label class="block text-xs font-bold text-gray-800 mb-1"><i class="fas fa-award text-blue-600 mr-1"></i> Certifications (Optional) </label>
+                        <input id="vendor-cert" type="text" placeholder="e.g., ISO 9001, MSME, GMP" class="w-full px-3 py-2 border border-blue-300 rounded-md text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div id="otp-section" class="hidden mt-4 pt-3 border-t border-blue-200">
+                        <label class="block text-xs font-bold text-green-700 mb-1">
+                            <i class="fas fa-check-circle"></i> Enter OTP sent to Aadhar linked mobile *
+                        </label>
+                        <input id="kyc-otp" type="text" placeholder="Enter 6-digit OTP" class="w-full px-3 py-2 border border-green-300 rounded-md text-sm outline-none focus:ring-2 focus:ring-green-500">
+                        <p class="text-[10px] text-gray-500 mt-1 italic">Demo: Enter '123456' to verify.</p>
+                    </div>
+                </div>
+
+                <button id="submit-btn" type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition duration-200 mt-6 shadow-lg">
+                    Sign In <i class="fas fa-sign-in-alt ml-2"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+
+    <div id="dashboard-section" class="hidden min-h-screen bg-gray-50 flex flex-col relative">
+        
+        <nav class="bg-white border-b px-8 py-4 flex justify-between items-center shadow-sm sticky top-0 z-40">
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white"><i class="fas fa-handshake"></i></div>
+                    <div>
+                        <h1 class="font-bold text-xl text-gray-800 leading-tight">ProcureSmart</h1>
+                        <span id="user-role-badge" class="text-xs font-semibold px-2 py-0.5 rounded">Portal</span>
+                    </div>
+                </div>
+                
+                <div class="hidden md:flex ml-8 space-x-2 bg-gray-100 p-1 rounded-lg">
+                    <button onclick="switchTab('rfq')" id="nav-rfq" class="px-4 py-2 text-sm font-bold rounded bg-white text-blue-600 shadow-sm transition">Dashboard</button>
+                    <button onclick="switchTab('orders')" id="nav-orders" class="px-4 py-2 text-sm font-bold rounded text-gray-500 hover:text-gray-800 transition">Orders</button>
+                    <button onclick="switchTab('profile')" id="nav-profile" class="px-4 py-2 text-sm font-bold rounded text-gray-500 hover:text-gray-800 transition">Profile</button>
+                    <button onclick="switchTab('help')" id="nav-help" class="px-4 py-2 text-sm font-bold rounded text-gray-500 hover:text-gray-800 transition">Help & Support</button>
+                </div>
+            </div>
+
+            <button onclick="handleLogout()" class="text-gray-500 hover:text-red-600 font-bold text-sm flex items-center bg-gray-100 hover:bg-red-50 px-4 py-2 rounded-lg transition">
+                <i class="fas fa-sign-out-alt mr-2"></i> Logout
+            </button>
+        </nav>
+
+        <main class="flex-1 p-6 max-w-6xl mx-auto w-full mt-4 relative">
+            
+            <div id="view-rfq" class="fade-in">
+                <div class="flex justify-between items-end mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">Active RFQs</h2>
+                        <p class="text-gray-500 text-sm">Compare vendors and manage procurement.</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <button class="border-2 border-purple-200 text-purple-700 bg-purple-50 hover:bg-purple-100 px-4 py-2 rounded-lg font-bold shadow-sm transition flex items-center">
+                            <i class="fas fa-magic mr-2"></i> AI Auto-Fill via Excel
+                        </button>
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-bold shadow transition flex items-center">
+                            <i class="fas fa-plus mr-2"></i> Post RFQ
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-indigo-50 border-l-4 border-indigo-500 p-3 mb-6 rounded text-sm text-indigo-900 shadow-sm flex items-center">
+                    <i class="fas fa-lightbulb text-indigo-500 mr-3 fa-lg"></i>
+                    <span><b>AI Market Insight:</b> Current market average for Industrial Sensors is <b>₹98.50</b>. Vendor prices are trending down by 2% this week. Good time to negotiate!</span>
+                </div>
+
+                <div class="bg-white rounded-xl shadow border overflow-hidden">
+                    <div class="px-6 py-4 border-b bg-gray-50 flex justify-between items-center">
+                        <div>
+                            <h3 class="font-bold text-gray-800"><i class="fas fa-file-invoice text-blue-500 mr-2"></i> RFQ #8821: 500x Industrial Sensors</h3>
+                            <p class="text-xs text-gray-500 mt-1">Quantity: 500 | Industry: Manufacturing | Timeline: Urgent</p>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <button class="text-blue-600 text-xs font-bold hover:underline bg-white border px-3 py-1 rounded shadow-sm">
+                                <i class="fas fa-file-pdf mr-1"></i> Export Report
+                            </button>
+                            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold border border-green-200">
+                                <i class="fas fa-circle text-[8px] mr-1"></i> LIVE
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-white text-gray-400 text-xs uppercase tracking-wider border-b">
+                                    <th class="px-6 py-4 font-semibold">Vendor (Anonymous)</th>
+                                    <th class="px-6 py-4 font-semibold">Price/Unit</th>
+                                    <th class="px-6 py-4 font-semibold">Delivery</th>
+                                    <th class="px-6 py-4 font-semibold">Rating</th>
+                                    <th class="px-6 py-4 font-semibold">AI Status</th>
+                                    <th class="px-6 py-4 font-semibold text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y text-sm">
+                                <tr class="hover:bg-gray-50 transition">
+                                    <td class="px-6 py-4">
+                                        <span class="font-medium text-gray-800">Vendor A</span>
+                                        <span class="ml-2 text-blue-600 text-[10px] bg-blue-50 px-2 py-0.5 rounded border border-blue-100"><i class="fas fa-check-circle"></i> Verified</span>
+                                    </td>
+                                    <td class="px-6 py-4 font-bold text-gray-700">₹100</td>
+                                    <td class="px-6 py-4 text-gray-600">5 Days</td>
+                                    <td class="px-6 py-4 text-yellow-500 font-medium">4.8 <i class="fas fa-star"></i></td>
+                                    <td class="px-6 py-4"><span class="text-gray-500 text-xs bg-gray-100 px-2 py-1 rounded border">Negotiating</span></td>
+                                    <td class="px-6 py-4 text-right">
+                                        <button onclick="toggleChat()" class="text-blue-600 font-bold border border-blue-600 px-4 py-1.5 rounded hover:bg-blue-50 transition">Chat <i class="fas fa-comment-dots ml-1"></i></button>
+                                    </td>
+                                </tr>
+                                <tr class="bg-blue-50/50 hover:bg-blue-50 transition border-l-4 border-blue-500">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center flex-wrap gap-1">
+                                            <span class="font-medium text-gray-800 mr-2">Vendor C</span>
+                                            <span class="text-blue-600 text-[10px] bg-blue-50 px-2 py-0.5 rounded border border-blue-100"><i class="fas fa-check-circle"></i> Verified</span>
+                                            <span class="text-green-600 text-[10px] bg-green-50 px-2 py-0.5 rounded border border-green-200"><i class="fas fa-leaf"></i> Eco-Certified</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 font-bold text-gray-800">₹97</td>
+                                    <td class="px-6 py-4 text-gray-600">4 Days</td>
+                                    <td class="px-6 py-4 text-yellow-500 font-medium">4.6 <i class="fas fa-star"></i></td>
+                                    <td class="px-6 py-4">
+                                        <span class="bg-blue-600 text-white text-[10px] px-2 py-1 rounded-full font-bold shadow-sm">
+                                            <i class="fas fa-trophy mr-1"></i> RECOMMENDED
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <button class="bg-blue-600 text-white font-bold px-4 py-1.5 rounded shadow hover:bg-blue-700 transition">Select</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-6 py-3 bg-gray-50 border-t text-xs flex justify-between items-center">
+                        <span class="text-gray-500"><i class="fas fa-robot text-blue-500"></i> AI Recommendation Engine weights: Price 40% · Delivery 20%...</span>
+                        <span class="text-green-700 font-bold bg-green-100 px-2 py-1 rounded border border-green-200"><i class="fas fa-link"></i> Blockchain Escrow Secured</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-orders" class="hidden fade-in">
+                <div class="flex justify-between items-end mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Order Tracking</h2>
+                    <span class="bg-green-100 text-green-700 text-xs px-3 py-1.5 rounded font-bold border border-green-200"><i class="fas fa-lock mr-1"></i> Smart Contract Active</span>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow border p-8 max-w-3xl">
+                    <h3 class="font-bold text-lg border-b pb-3 mb-8 text-gray-800">Order #ORD-9920 <span class="text-sm font-normal text-gray-500 ml-2">Assigned to: Vendor C</span></h3>
+                    
+                    <div class="relative border-l-2 border-gray-200 ml-4 space-y-8">
+                        <div class="pl-8 relative">
+                            <span class="absolute w-5 h-5 bg-blue-600 rounded-full -left-[11px] ring-4 ring-white flex items-center justify-center text-[10px] text-white"><i class="fas fa-check"></i></span>
+                            <h3 class="font-bold text-gray-800">Smart Contract Created</h3>
+                            <p class="text-sm text-gray-500 mt-1">PO generated and terms locked immutably on the blockchain network.</p>
+                        </div>
+                        <div class="pl-8 relative">
+                            <span class="absolute w-5 h-5 bg-blue-600 rounded-full -left-[11px] ring-4 ring-white flex items-center justify-center text-[10px] text-white"><i class="fas fa-check"></i></span>
+                            <h3 class="font-bold text-gray-800">Escrow Funded</h3>
+                            <p class="text-sm text-gray-500 mt-1">Funds secured in escrow vault. Vendor notified to begin production.</p>
+                        </div>
+                        <div class="pl-8 relative">
+                            <span class="absolute w-5 h-5 bg-yellow-400 rounded-full -left-[11px] ring-4 ring-white animate-pulse"></span>
+                            <h3 class="font-bold text-gray-800">Manufacturing in Progress</h3>
+                            <p class="text-sm text-gray-500 mt-1">Vendor C is currently processing the 500x Industrial Sensors.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-profile" class="hidden fade-in">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">My Profile</h2>
+                <div class="bg-white rounded-xl shadow border p-6 max-w-2xl">
+                    <div class="flex items-center mb-6 border-b pb-6">
+                        <div class="w-20 h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-3xl font-bold mr-6">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <h3 id="prof-name" class="text-xl font-bold text-gray-900">User Name</h3>
+                            <p id="prof-type" class="text-sm font-bold text-blue-600 mt-1">Role Type</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-6 text-sm">
+                        <div>
+                            <p class="text-gray-400 font-bold mb-1">Email Address</p>
+                            <p id="prof-email" class="font-medium text-gray-800">email@example.com</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 font-bold mb-1">Phone Number</p>
+                            <p id="prof-phone" class="font-medium text-gray-800">+91 0000000000</p>
+                        </div>
+                    </div>
+                    
+                    <div id="prof-kyc-section" class="mt-6 pt-6 border-t bg-gray-50 p-4 rounded-lg border-l-4 border-green-500">
+                        <h4 class="font-bold text-gray-800 mb-4"><i class="fas fa-shield-alt text-blue-500 mr-2"></i> KYC Verified Details</h4>
+                        <div class="grid grid-cols-3 gap-4 text-sm mb-4">
+                            <div>
+                                <p class="text-gray-400 font-bold mb-1">Aadhar</p>
+                                <p id="prof-aadhar" class="font-medium text-gray-800">-</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400 font-bold mb-1">GST No.</p>
+                                <p id="prof-gst" class="font-medium text-gray-800">-</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400 font-bold mb-1">PAN No.</p>
+                                <p id="prof-pan" class="font-medium text-gray-800">-</p>
+                            </div>
+                        </div>
+                        
+                        <div id="prof-trade-license-div" class="hidden border-t border-gray-200 pt-3 mt-2">
+                            <p class="text-gray-400 font-bold mb-1">Trade License (Municipal Authority)</p>
+                            <p id="prof-trade-license" class="font-medium text-gray-800">-</p>
+                        </div>
+                        
+                        <div id="prof-cert-div" class="hidden border-t border-gray-200 pt-3 mt-3">
+                            <p class="text-gray-400 font-bold mb-1"><i class="fas fa-award mr-1"></i> Certifications</p>
+                            <p id="prof-cert" class="font-medium text-gray-800 bg-blue-50 inline-block px-3 py-1 rounded text-xs border border-blue-100">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-help" class="hidden fade-in">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Help & Support</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <div class="bg-white rounded-xl shadow border p-6 h-fit">
+                        <h3 class="font-bold text-lg mb-4 border-b pb-2"><i class="fas fa-headset text-blue-500 mr-2"></i> Contact Admin</h3>
+                        <p class="text-sm text-gray-600 mb-4">Facing issues with verification or RFQs? Reach out to our support team.</p>
+                        <div class="space-y-2 text-sm font-medium">
+                            <p><i class="fas fa-envelope text-gray-400 w-6"></i> support@procuresmart.com</p>
+                            <p><i class="fas fa-phone text-gray-400 w-6"></i> 1800-123-4567 (Toll Free)</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow border p-6">
+                        <h3 class="font-bold text-lg mb-4 border-b pb-2"><i class="fas fa-ticket-alt text-blue-500 mr-2"></i> Raise an Issue</h3>
+                        <form onsubmit="handleIssueSubmit(event)" id="issue-form" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Issue Category</label>
+                                <select class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                                    <option>Verification Pending</option>
+                                    <option>Payment/Escrow Issue</option>
+                                    <option>RFQ / Negotiation Problem</option>
+                                    <option>Platform Bug</option>
+                                    <option>Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                                <input type="text" required placeholder="Brief title of the issue" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                                <textarea required placeholder="Describe your issue in detail..." rows="3" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"></textarea>
+                            </div>
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white w-full py-2 rounded-lg font-bold shadow transition">Submit Ticket</button>
+                            <div id="ticket-success" class="hidden mt-2 text-green-700 bg-green-50 p-2 rounded text-sm font-bold border border-green-200 text-center"><i class="fas fa-check-circle"></i> Ticket submitted successfully!</div>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+
+        </main>
+
+        <div id="chat-modal" class="hidden fixed bottom-6 right-6 w-80 bg-white rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] border border-gray-200 z-50 flex-col overflow-hidden fade-in">
+            <div class="bg-blue-600 text-white px-4 py-3 flex justify-between items-center shadow-md">
+                <span class="font-bold text-sm"><i class="fas fa-user-secret mr-2"></i> Vendor A (Anonymous)</span>
+                <button onclick="toggleChat()" class="text-blue-100 hover:text-white transition"><i class="fas fa-times fa-lg"></i></button>
+            </div>
+            <div class="p-4 bg-gray-50 h-64 overflow-y-auto space-y-3 text-sm flex flex-col font-sans">
+                <div class="self-start bg-white border border-gray-200 p-2.5 rounded-lg rounded-tl-none max-w-[85%] shadow-sm text-gray-700">
+                    Your initial quote is ₹100. Market average is lower. Can we close at ₹95?
+                </div>
+                <div class="self-end bg-blue-100 border border-blue-200 p-2.5 rounded-lg rounded-tr-none max-w-[85%] shadow-sm text-blue-900">
+                    We use premium grade components. Best we can do is ₹96 if quantity is above 400 units.
+                </div>
+            </div>
+            <div class="p-3 border-t bg-white flex gap-2 items-center">
+                <input type="text" placeholder="Type message..." class="flex-1 border border-gray-300 rounded-full px-4 py-2 text-sm outline-none focus:border-blue-500 font-sans">
+                <button class="bg-blue-600 text-white w-9 h-9 rounded-full flex items-center justify-center hover:bg-blue-700 transition shadow-sm"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let authMode = 'login'; 
+        let currentRole = 'client'; 
+        let isOtpSent = false; 
+
+        let mockDB = JSON.parse(localStorage.getItem('procureSmartDB')) || []; 
+        let loggedInUser = null;
+
+        function showError(msg) {
+            document.getElementById('success-message').classList.add('hidden');
+            document.getElementById('error-message').classList.remove('hidden');
+            document.getElementById('error-text').innerText = msg;
+        }
+        function showSuccess(msg) {
+            document.getElementById('error-message').classList.add('hidden');
+            document.getElementById('success-message').classList.remove('hidden');
+            document.getElementById('success-text').innerText = msg;
+        }
+        function hideMessages() {
+            document.getElementById('error-message').classList.add('hidden');
+            document.getElementById('success-message').classList.add('hidden');
+        }
+
+        function resetOTP() {
+            isOtpSent = false;
+            document.getElementById('otp-section').classList.add('hidden');
+            document.getElementById('kyc-otp').removeAttribute('required');
+            document.getElementById('kyc-otp').value = '';
+            
+            if(authMode === 'register') {
+                document.getElementById('submit-btn').innerHTML = 'Create Account <i class="fas fa-user-plus ml-2"></i>';
+                document.getElementById('submit-btn').className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition duration-200 mt-6 shadow-lg";
+            }
+        }
+
+        function setAuthMode(mode) {
+            authMode = mode;
+            hideMessages();
+            resetOTP();
+
+            const tabLogin = document.getElementById('tab-login');
+            const tabRegister = document.getElementById('tab-register');
+            const registerFields = document.getElementById('register-fields');
+            const confirmPassContainer = document.getElementById('confirm-password-container');
+            const submitBtn = document.getElementById('submit-btn');
+            
+            if (mode === 'login') {
+                tabLogin.className = "flex-1 py-3 text-sm font-bold border-b-2 border-blue-600 text-blue-600 transition";
+                tabRegister.className = "flex-1 py-3 text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition";
+                registerFields.classList.add('hidden');
+                confirmPassContainer.classList.add('hidden');
+                document.getElementById('kyc-fields').classList.add('hidden');
+                submitBtn.innerHTML = 'Sign In <i class="fas fa-sign-in-alt ml-2"></i>';
+                
+                document.getElementById('reg-name').removeAttribute('required');
+                document.getElementById('reg-phone').removeAttribute('required');
+                document.getElementById('confirm-password').removeAttribute('required');
+                document.getElementById('kyc-aadhar').removeAttribute('required');
+                document.getElementById('kyc-gst').removeAttribute('required');
+                document.getElementById('kyc-pan').removeAttribute('required');
+                document.getElementById('vendor-trade-license').removeAttribute('required');
+
+            } else {
+                tabRegister.className = "flex-1 py-3 text-sm font-bold border-b-2 border-blue-600 text-blue-600 transition";
+                tabLogin.className = "flex-1 py-3 text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition";
+                registerFields.classList.remove('hidden');
+                confirmPassContainer.classList.remove('hidden');
+                document.getElementById('kyc-fields').classList.remove('hidden');
+                submitBtn.innerHTML = 'Create Account <i class="fas fa-user-plus ml-2"></i>';
+                
+                document.getElementById('reg-name').setAttribute('required', 'true');
+                document.getElementById('reg-phone').setAttribute('required', 'true');
+                document.getElementById('confirm-password').setAttribute('required', 'true');
+                document.getElementById('kyc-aadhar').setAttribute('required', 'true');
+                document.getElementById('kyc-gst').setAttribute('required', 'true');
+                document.getElementById('kyc-pan').setAttribute('required', 'true');
+            }
+            setRole(currentRole); 
+        }
+
+        function setRole(role) {
+            currentRole = role;
+            hideMessages();
+            resetOTP();
+            
+            const btnClient = document.getElementById('btn-client');
+            const btnVendor = document.getElementById('btn-vendor');
+            const tradeLicenseDiv = document.getElementById('vendor-trade-license-div');
+            const vendorCertDiv = document.getElementById('vendor-certification-div'); // NEW
+
+            if (role === 'client') {
+                btnClient.className = "flex-1 py-2 text-sm font-bold rounded-md bg-blue-600 text-white shadow transition-all duration-300";
+                btnVendor.className = "flex-1 py-2 text-sm font-bold rounded-md text-gray-500 hover:text-gray-800 transition-all duration-300";
+                
+                tradeLicenseDiv.classList.add('hidden');
+                vendorCertDiv.classList.add('hidden');
+                document.getElementById('vendor-trade-license').removeAttribute('required');
+            } else {
+                btnVendor.className = "flex-1 py-2 text-sm font-bold rounded-md bg-blue-600 text-white shadow transition-all duration-300";
+                btnClient.className = "flex-1 py-2 text-sm font-bold rounded-md text-gray-500 hover:text-gray-800 transition-all duration-300";
+                
+                if(authMode === 'register') {
+                    tradeLicenseDiv.classList.remove('hidden');
+                    vendorCertDiv.classList.remove('hidden');
+                    document.getElementById('vendor-trade-license').setAttribute('required', 'true');
+                }
+            }
+        }
+
+        function handleAuthSubmit(event) {
+            event.preventDefault(); 
+            hideMessages();
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (authMode === 'login') {
+                const user = mockDB.find(u => u.email === email && u.role === currentRole);
+                if (!user) {
+                    showError(`No ${currentRole} account found with this email. Please register.`);
+                    return;
+                }
+                if (user.password !== password) {
+                    showError("Incorrect password.");
+                    return;
+                }
+                loggedInUser = user;
+                loadDashboard();
+            } 
+            else if (authMode === 'register') {
+                if (password !== document.getElementById('confirm-password').value) {
+                    showError("Passwords do not match.");
+                    return; 
+                }
+                if (mockDB.some(u => u.email === email && u.role === currentRole)) {
+                    showError("Account already exists. Please Sign In.");
+                    return;
+                }
+
+                if (!isOtpSent) {
+                    document.getElementById('otp-section').classList.remove('hidden');
+                    document.getElementById('kyc-otp').setAttribute('required', 'true');
+                    
+                    const submitBtn = document.getElementById('submit-btn');
+                    submitBtn.innerHTML = 'Verify OTP & Register <i class="fas fa-check-circle ml-2"></i>';
+                    submitBtn.className = "w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition duration-200 mt-6 shadow-lg";
+                    
+                    showSuccess("OTP sent to your Aadhar linked mobile number.");
+                    isOtpSent = true;
+                    return; 
+                } else {
+                    const otpEntered = document.getElementById('kyc-otp').value;
+                    if(otpEntered !== '123456') { 
+                        showError("Invalid OTP. Please enter '123456'.");
+                        return;
+                    }
+                }
+                
+                const newUser = {
+                    name: document.getElementById('reg-name').value,
+                    phone: document.getElementById('reg-phone').value,
+                    email: email,
+                    password: password,
+                    role: currentRole,
+                    aadhar: document.getElementById('kyc-aadhar').value,
+                    gst: document.getElementById('kyc-gst').value,
+                    pan: document.getElementById('kyc-pan').value
+                };
+
+                // Add Vendor Specific Details including Certifications
+                if (currentRole === 'vendor') {
+                    newUser.tradeLicense = document.getElementById('vendor-trade-license').value;
+                    // Save certification if entered, else save 'None'
+                    const certInput = document.getElementById('vendor-cert').value;
+                    newUser.certifications = certInput ? certInput : 'None provided';
+                }
+
+                mockDB.push(newUser);
+                localStorage.setItem('procureSmartDB', JSON.stringify(mockDB));
+                
+                document.querySelector('form').reset();
+                setAuthMode('login');
+                showSuccess("Account created successfully! You can now Sign In.");
+            }
+        }
+
+        function loadDashboard() {
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('dashboard-section').classList.remove('hidden');
+            switchTab('rfq'); 
+
+            const roleBadge = document.getElementById('user-role-badge');
+            if(loggedInUser.role === 'client') {
+                roleBadge.innerText = 'Verified Client';
+                roleBadge.className = 'text-xs font-semibold bg-blue-100 text-blue-700 px-2 py-0.5 rounded border border-blue-200';
+            } else {
+                roleBadge.innerText = 'Verified Vendor';
+                roleBadge.className = 'text-xs font-semibold bg-green-100 text-green-700 px-2 py-0.5 rounded border border-green-200';
+            }
+
+            document.getElementById('prof-name').innerText = loggedInUser.name;
+            document.getElementById('prof-type').innerText = loggedInUser.role.toUpperCase();
+            document.getElementById('prof-email').innerText = loggedInUser.email;
+            document.getElementById('prof-phone').innerText = loggedInUser.phone;
+
+            const maskedAadhar = "XXXX-XXXX-" + loggedInUser.aadhar.slice(-4);
+            document.getElementById('prof-aadhar').innerText = maskedAadhar;
+            document.getElementById('prof-gst').innerText = loggedInUser.gst;
+            document.getElementById('prof-pan').innerText = loggedInUser.pan;
+
+            // Show Trade License & Certifications for Vendor Profile
+            if(loggedInUser.role === 'vendor') {
+                document.getElementById('prof-trade-license-div').classList.remove('hidden');
+                document.getElementById('prof-cert-div').classList.remove('hidden');
+                
+                document.getElementById('prof-trade-license').innerText = loggedInUser.tradeLicense;
+                document.getElementById('prof-cert').innerText = loggedInUser.certifications || 'None';
+            } else {
+                document.getElementById('prof-trade-license-div').classList.add('hidden');
+                document.getElementById('prof-cert-div').classList.add('hidden');
+            }
+        }
+
+        function switchTab(tabId) {
+            document.getElementById('view-rfq').classList.add('hidden');
+            document.getElementById('view-orders').classList.add('hidden');
+            document.getElementById('view-profile').classList.add('hidden');
+            document.getElementById('view-help').classList.add('hidden');
+            
+            document.getElementById('nav-rfq').className = "px-4 py-2 text-sm font-bold rounded text-gray-500 hover:text-gray-800 transition";
+            document.getElementById('nav-orders').className = "px-4 py-2 text-sm font-bold rounded text-gray-500 hover:text-gray-800 transition";
+            document.getElementById('nav-profile').className = "px-4 py-2 text-sm font-bold rounded text-gray-500 hover:text-gray-800 transition";
+            document.getElementById('nav-help').className = "px-4 py-2 text-sm font-bold rounded text-gray-500 hover:text-gray-800 transition";
+
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+            document.getElementById(`nav-${tabId}`).className = "px-4 py-2 text-sm font-bold rounded bg-white text-blue-600 shadow-sm transition";
+            
+            if(tabId !== 'rfq') {
+                document.getElementById('chat-modal').classList.remove('flex');
+                document.getElementById('chat-modal').classList.add('hidden');
+            }
+        }
+
+        function toggleChat() {
+            const chatBox = document.getElementById('chat-modal');
+            if(chatBox.classList.contains('hidden')) {
+                chatBox.classList.remove('hidden');
+                chatBox.classList.add('flex');
+            } else {
+                chatBox.classList.remove('flex');
+                chatBox.classList.add('hidden');
+            }
+        }
+
+        // New Feature: Handle Issue Submission
+        function handleIssueSubmit(event) {
+            event.preventDefault(); // Prevent page reload
+            const successMsg = document.getElementById('ticket-success');
+            const form = document.getElementById('issue-form');
+            
+            // Show success message
+            successMsg.classList.remove('hidden');
+            
+            // Clear form
+            form.reset();
+            
+            // Hide message after 4 seconds
+            setTimeout(() => {
+                successMsg.classList.add('hidden');
+            }, 4000);
+        }
+
+        function handleLogout() {
+            loggedInUser = null;
+            document.getElementById('dashboard-section').classList.add('hidden');
+            document.getElementById('auth-section').classList.remove('hidden');
+            document.querySelector('form').reset();
+            hideMessages();
+            setAuthMode('login'); 
+            
+            document.getElementById('chat-modal').classList.add('hidden');
+            document.getElementById('chat-modal').classList.remove('flex');
+        }
+    </script>
+</body>
+</html>
